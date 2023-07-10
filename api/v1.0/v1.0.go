@@ -22,5 +22,6 @@ func ApplyRoutes(r *gin.RouterGroup) {
 		v1.GET("/ping", ping)
 		v1.GET("/TEST_CREATE", sample.SAMPLE_TEST_CREATE)
 		v1.GET("/TEST_BUILD", sample.SAMPLE_TEST_BUILD)
+		v1.GET("/TEST_CLONE", sample.SAMPLE_TEST_CLONE)
 	}
 }
