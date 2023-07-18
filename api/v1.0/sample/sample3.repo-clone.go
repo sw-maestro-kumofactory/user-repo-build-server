@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/gin-gonic/gin"
-	repo "github.com/sw-maestro-kumofactory/miz-ball/utils/repodownload"
+	repo "github.com/sw-maestro-kumofactory/miz-ball/utils/repomanagement"
 )
 
 func SAMPLE_TEST_CLONE(c *gin.Context) {

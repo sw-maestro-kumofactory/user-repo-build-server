@@ -5,7 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	// "github.com/sw-maestro-kumofactory/miz-ball/api/v1.0/{api_name}"
+	"github.com/sw-maestro-kumofactory/miz-ball/api/v1.0/deploy"
 	"github.com/sw-maestro-kumofactory/miz-ball/api/v1.0/sample"
 )
 
@@ -15,7 +15,6 @@ func ping(c *gin.Context) {
 	})
 }
 
-// ApplyRoutes applies router to gin Router
 func ApplyRoutes(r *gin.RouterGroup) {
 	v1 := r.Group("/v1")
 	{
@@ -23,5 +22,9 @@ func ApplyRoutes(r *gin.RouterGroup) {
 		v1.GET("/TEST_CREATE", sample.SAMPLE_TEST_CREATE)
 		v1.GET("/TEST_BUILD", sample.SAMPLE_TEST_BUILD)
 		v1.GET("/TEST_CLONE", sample.SAMPLE_TEST_CLONE)
+		v1.GET("/TEST_PUSH", sample.SAMPLE_TEST_PUSH)
+		v1.GET("/TEST_FIND", sample.FindDockerfile)
+		// v1.GET("/bind", bind.)
+		v1.POST("/deploy", deploy.ApplicationDeploy)
 	}
 }

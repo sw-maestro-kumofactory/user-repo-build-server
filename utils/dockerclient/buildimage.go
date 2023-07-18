@@ -39,7 +39,3 @@ func BuildImage(dockerClient *client.Client, tarPath string, tags []string, dock
 
 	return nil
 }
-
-
-
-//  curl -v -X POST -H "Content-Type:application/tar" --data-binary '@node-hello.tar.gz' --unix-socket /var/run/docker.sock http://v1.41/build?t=build_test\&dockerfile=node-hello/Dockerfile

@@ -17,7 +17,7 @@ func SAMPLE_TEST_BUILD(c *gin.Context) {
 	}
 
 	tarPath := "sample-package/node-hello.tar.gz"
-	tags := []string{"build_test"}
+	tags := []string{"434126037102.dkr.ecr.ap-northeast-2.amazonaws.com/kumo-customer:i-02b5064a1e36be086"}
 	dockerfilePath := "node-hello/Dockerfile"
 
 	err = dockerclient.BuildImage(cli, tarPath, tags, dockerfilePath)

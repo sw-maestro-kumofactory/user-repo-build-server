@@ -1,4 +1,4 @@
-package repodownload
+package repomanagement
 
 import (
 	"io"
