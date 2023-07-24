@@ -2,6 +2,7 @@ package sample
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"github.com/gin-gonic/gin"
 
@@ -9,7 +10,7 @@ import (
 )
 
 func FindDockerfile(c *gin.Context) {
-	filePath := "/app/repository/my_archive.tar.gz"
+	filePath := "/app/repository/i-02b5064a1e36be086/repo.tar.gz"
 
 	dockerfilePath, err := repo.FindDockerfileInTar(filePath)
 	if err != nil {
@@ -18,4 +19,5 @@ func FindDockerfile(c *gin.Context) {
 	}
 
 	fmt.Println("Dockerfile path:", dockerfilePath)
+	fmt.Println("Parent path:", filepath.Dir(dockerfilePath))
 }

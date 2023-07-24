@@ -11,10 +11,10 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
 
-	"github.com/sw-maestro-kumofactory/miz-ball/config"
+	"github.com/sw-maestro-kumofactory/miz-ball/utils/ecr/config"
 )
 
-func ecrAuthConfig() (string, error) {
+func ecrAuthConfig( /*password string*/ ) (string, error) {
 	password, err := config.ReadECRPassword()
 	if err != nil {
 		fmt.Println(err.Error())

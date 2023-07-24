@@ -1,6 +1,7 @@
 package deploy
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
@@ -9,6 +10,7 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/gin-gonic/gin"
 
+	conf "github.com/sw-maestro-kumofactory/miz-ball/config"
 	"github.com/sw-maestro-kumofactory/miz-ball/utils/dockerclient"
 	"github.com/sw-maestro-kumofactory/miz-ball/utils/ecr"
 	rep "github.com/sw-maestro-kumofactory/miz-ball/utils/repomanagement"
@@ -34,7 +36,7 @@ type PortBindInfo struct {
 
 var rootDir = "/app/repository/"
 
-func ApplicationDeploy(c *gin.Context) {
+func ApplicationDeploy2(c *gin.Context) {
 	var info DeployInfo
 	var dockerClient *client.Client
 
@@ -51,6 +53,7 @@ func ApplicationDeploy(c *gin.Context) {
 		return
 	}
 
+	fmt.Println(info.InstanceId)
 	repoDir, err = createRepositoryDirectory(info.InstanceId)
 	if handleError(c, err, http.StatusBadRequest) {
 		return
@@ -62,26 +65,40 @@ func ApplicationDeploy(c *gin.Context) {
 		return
 	}
 
-	if info.Dockerfile {
-		dockerfilePath, err = rep.FindDockerfileInTar(tarPath)
-		if handleError(c, err, http.StatusBadRequest) {
-			return
-		}
-
-		imageName, err := buildContainer(dockerClient, tarPath, info.InstanceId, dockerfilePath)
-		if handleError(c, err, http.StatusBadRequest) {
-			return
-		}
-
-		err = pushOnECR(dockerClient, imageName)
-		if handleError(c, err, http.StatusBadRequest) {
-			return
-		}
-
-	} else {
-		// TODO: Case when Dockerfile is not exist
-		dockerfilePath = ""
+	r, err := os.Open(tarPath)
+	if err != nil {
+		fmt.Println("error")
 	}
+	rep.ExtractTarGz(r, repoDir)
+
+	dockerfilePath, _ = rep.FindDockerfileInTar(tarPath)
+	folderName := filepath.Dir(dockerfilePath)
+
+	srcDir := filepath.Join(repoDir, folderName)
+	dstDir := repoDir
+
+	err = rep.ArchiveToTarGz(srcDir, dstDir)
+	if handleError(c, err, http.StatusBadRequest) {
+		return
+	}
+
+	targetTarPath := filepath.Join(repoDir, folderName+".tar.gz")
+
+	imageName, err := buildContainer(dockerClient, targetTarPath, info.InstanceId, "Dockerfile")
+	if handleError(c, err, http.StatusBadRequest) {
+		return
+	}
+
+	err = pushOnECR(dockerClient, imageName)
+	if handleError(c, err, http.StatusBadRequest) {
+		return
+	}
+
+	if info.PortBind.Count > 0 {
+		saveInfo(info.InstanceId, info.PortBind)
+	}
+
+	os.RemoveAll(repoDir)
 }
 
 func handleError(c *gin.Context, err error, status int) bool {
@@ -126,4 +143,11 @@ func buildContainer(cli *client.Client, tarPath string, instanceId string, docke
 
 func pushOnECR(cli *client.Client, imageName string) error {
 	return ecr.Push(cli, imageName)
+}
+
+func saveInfo(key string, value PortBindInfo) {
+	redisCli, _ := conf.InitRedisClient()
+	// redisCli.Set("hello", "world", 0).Err()
+	jsonData, _ := json.Marshal(value)
+	redisCli.Set(key, jsonData, 0).Err()
 }
