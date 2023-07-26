@@ -12,7 +12,8 @@ func JavaApplication(targetDir string) {
 	builder.AddDirective(dfenum.FROM, "gradle:jdk17-alpine AS builder")
 	builder.AddDirective(dfenum.WORKDIR, "/src")
 	builder.AddDirective(dfenum.COPY, ". .")
-	builder.AddDirective(dfenum.RUN, "gradle build && \\\n    cd build/libs && \\\n    ls && \\\n    rm $(ls *plain.jar) && \\\n    mv $(ls *.jar) app.jar")
+	builder.AddDirective(dfenum.RUN, "ls")
+	builder.AddDirective(dfenum.RUN, "gradle build && cd build/libs && ls && rm $(ls *plain.jar) && mv $(ls *.jar) app.jar")
 
 	// Build the second stage
 	builder.AddDirective(dfenum.FROM, "openjdk:17-alpine")

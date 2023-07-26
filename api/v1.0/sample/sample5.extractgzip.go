@@ -22,7 +22,7 @@ func SAMPLE_EXTRACT(c *gin.Context) {
 func SAMPLE_ARCHIVE(c *gin.Context) {
 	srcDir := "/app/repository/i-02b5064a1e36be086/coding-convention-sample-flask-f361fb2"
 	dstDir := filepath.Dir(srcDir)
-	err := repo.ArchiveToTarGz(srcDir, dstDir)
+	err := repo.CompressToTarGz(srcDir, dstDir)
 	if err != nil {
 		fmt.Println(err.Error())
 	}

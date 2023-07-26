@@ -84,5 +84,5 @@ func GetFolderNameFromTar(filePath string) (string, error) {
 		}
 	}
 
-	return "", fmt.Errorf("Folder not found")
+	return "", fmt.Errorf("folder not found")
 }

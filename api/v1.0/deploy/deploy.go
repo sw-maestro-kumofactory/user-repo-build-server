@@ -43,7 +43,7 @@ type DeployInfo struct {
 	User        string       `json:"user" binding:"required"`
 	Repo        string       `json:"repo" binding:"required"`
 	Branch      string       `json:"branch" binding:"required"`
-	Dockerfile  bool         `json:"Dockerfile" binding:"required"`
+	Dockerfile  bool         `json:"Dockerfile"`
 	PortBind    PortBindInfo `json:"portbind"`
 	Language    string       `json:"Language"`
 	Runtime     string       `json:"Runtime"`
@@ -109,7 +109,7 @@ func ApplicationDeploy2(c *gin.Context) {
 		}
 	}
 
-	err = rep.ArchiveToTarGz(srcDir, dstDir)
+	err = rep.CompressToTarGz(srcDir, dstDir)
 	if handleError(c, err, http.StatusBadRequest) {
 		return
 	}

@@ -46,72 +46,73 @@ func ExtractTarGz(gzipStream io.Reader, targetDir string) {
 	}
 }
 
-func ArchiveToTarGz(srcDir, destDir string) error {
-	// 소스 디렉토리 열기
-	source, err := os.Open(srcDir)
-	if err != nil {
-		return err
-	}
-	defer source.Close()
-
-	// 목적지 디렉토리로 tar.gz 파일 생성
+func CompressToTarGz(srcDir, dstDir string) error {
+	// 폴더 이름 설정
 	fileName := filepath.Base(srcDir) + ".tar.gz"
-	destFile, err := os.Create(filepath.Join(destDir, fileName))
+	dstFilePath := filepath.Join(dstDir, fileName)
+
+	// 파일 생성
+	dstFile, err := os.Create(dstFilePath)
 	if err != nil {
 		return err
 	}
-	defer destFile.Close()
+	defer dstFile.Close()
 
-	// gzip writer 생성
-	gw := gzip.NewWriter(destFile)
-	defer gw.Close()
+	// gzip 생성
+	gzWriter := gzip.NewWriter(dstFile)
+	defer gzWriter.Close()
 
-	// tar writer 생성
-	tw := tar.NewWriter(gw)
-	defer tw.Close()
+	// tar 생성
+	tarWriter := tar.NewWriter(gzWriter)
+	defer tarWriter.Close()
 
-	// 디렉토리 내부 파일들을 순회하며 tar 아카이브 작성
-	return filepath.Walk(srcDir, func(path string, info os.FileInfo, err error) error {
+	// srcDir 내부 파일들을 가져와서 tar에 추가
+	err = filepath.Walk(srcDir, func(filePath string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
 
-		// 현재 아이템의 상대 경로 얻기
-		relPath, err := filepath.Rel(srcDir, path)
-		if err != nil {
-			return err
-		}
-
-		// 디렉토리 자체는 무시
-		if relPath == "." {
+		// 디렉토리는 제외하고 파일만 처리
+		if !info.Mode().IsRegular() {
 			return nil
 		}
 
-		// 파일 정보 구하기
-		header, err := tar.FileInfoHeader(info, relPath)
+		// 상대 경로 구하기
+		relPath, err := filepath.Rel(srcDir, filePath)
 		if err != nil {
 			return err
 		}
 
-		// header 쓰기
-		if err := tw.WriteHeader(header); err != nil {
+		// tar 헤더 작성
+		header := &tar.Header{
+			Name: relPath,
+			Mode: int64(info.Mode()),
+			Size: info.Size(),
+		}
+
+		// tar에 파일 추가
+		if err := tarWriter.WriteHeader(header); err != nil {
 			return err
 		}
 
-		// 파일 내용 쓰기
-		if !info.IsDir() {
-			file, err := os.Open(path)
-			if err != nil {
-				return err
-			}
-			defer file.Close()
+		// 파일 내용 추가
+		file, err := os.Open(filePath)
+		if err != nil {
+			return err
+		}
+		defer file.Close()
 
-			_, err = io.Copy(tw, file)
-			if err != nil {
-				return err
-			}
+		_, err = io.Copy(tarWriter, file)
+		if err != nil {
+			return err
 		}
 
 		return nil
 	})
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
