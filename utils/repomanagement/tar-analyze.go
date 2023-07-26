@@ -55,65 +55,34 @@ func FindDockerfileInTar(filePath string) (string, error) {
 	return dockerfilePath, nil
 }
 
-// TODO: Dockerfile 추출 & EXPOSE 구문
-/*
-func ExtractFileFromTarGz(tarGzFilePath, targetFilePath, destinationDirPath string) error {
-	file, err := os.Open(tarGzFilePath)
+func GetFolderNameFromTar(filePath string) (string, error) {
+	file, err := os.Open(filePath)
 	if err != nil {
-		return err
+		return "", err
 	}
 	defer file.Close()
 
-	gzReader, err := gzip.NewReader(file)
+	gzipReader, err := gzip.NewReader(file)
 	if err != nil {
-		return err
+		return "", err
 	}
-	defer gzReader.Close()
+	defer gzipReader.Close()
 
-	tarReader := tar.NewReader(gzReader)
-
-	absTargetFilePath, err := filepath.Abs(targetFilePath)
-	if err != nil {
-		return err
-	}
-
-	absDestDirPath, err := filepath.Abs(destinationDirPath)
-	if err != nil {
-		return err
-	}
+	tarReader := tar.NewReader(gzipReader)
 
 	for {
 		header, err := tarReader.Next()
 		if err == io.EOF {
-			break
+			break // 파일의 끝에 도달하면 종료
 		}
 		if err != nil {
-			return err
+			return "", err
 		}
 
-		if header.Typeflag != tar.TypeReg {
-			continue
-		}
-
-		if header.Name == absTargetFilePath {
-			extractedFilePath := filepath.Join(absDestDirPath, filepath.Base(targetFilePath))
-
-			extractedFile, err := os.OpenFile(extractedFilePath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, header.FileInfo().Mode())
-			if err != nil {
-				return err
-			}
-			defer extractedFile.Close()
-
-			_, err = io.Copy(extractedFile, tarReader)
-			if err != nil {
-				return err
-			}
-
-			fmt.Printf("File %s extracted to %s\n", targetFilePath, extractedFilePath)
-			return nil
+		if header.Typeflag == tar.TypeDir {
+			return filepath.Base(header.Name), nil
 		}
 	}
 
-	return fmt.Errorf("file not found")
+	return "", fmt.Errorf("Folder not found")
 }
-*/
