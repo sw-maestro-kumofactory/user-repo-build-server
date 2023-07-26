@@ -11,10 +11,31 @@ import (
 	"github.com/gin-gonic/gin"
 
 	conf "github.com/sw-maestro-kumofactory/miz-ball/config"
+
 	"github.com/sw-maestro-kumofactory/miz-ball/utils/dockerclient"
 	"github.com/sw-maestro-kumofactory/miz-ball/utils/ecr"
 	rep "github.com/sw-maestro-kumofactory/miz-ball/utils/repomanagement"
+
+	dockerfilesamples "github.com/sw-maestro-kumofactory/miz-ball/utils/dockerfilegenerator/dockerfile-samples"
 )
+
+// TODO: add validation
+//	- check github repo
+//	- check branch
+//	- check dockerfile
+//	- check portbind
+//	- check language
+//	- check runtime
+//	- check compiler
+
+// TODO: add error handling
+//	- check github repo
+//	- check branch
+//	- check dockerfile
+//	- check portbind
+//	- check language
+//	- check runtime
+//	- check compiler
 
 type DeployInfo struct {
 	InstanceId  string       `json:"target-instance" binding:"required"`
@@ -24,6 +45,7 @@ type DeployInfo struct {
 	Branch      string       `json:"branch" binding:"required"`
 	Dockerfile  bool         `json:"Dockerfile" binding:"required"`
 	PortBind    PortBindInfo `json:"portbind"`
+	Language    string       `json:"Language"`
 	Runtime     string       `json:"Runtime"`
 	Compiler    string       `json:"Compiler"`
 }
@@ -40,7 +62,7 @@ func ApplicationDeploy2(c *gin.Context) {
 	var info DeployInfo
 	var dockerClient *client.Client
 
-	var repoDir, tarPath, dockerfilePath string
+	var repoDir, tarPath string
 
 	var err error
 
@@ -58,6 +80,7 @@ func ApplicationDeploy2(c *gin.Context) {
 	if handleError(c, err, http.StatusBadRequest) {
 		return
 	}
+	defer os.RemoveAll(repoDir)
 
 	tarPath = filepath.Join(repoDir, "repo.tar.gz")
 	err = cloneGitHubRepository(tarPath, info.User, info.Repo, info.Branch)
@@ -71,11 +94,20 @@ func ApplicationDeploy2(c *gin.Context) {
 	}
 	rep.ExtractTarGz(r, repoDir)
 
-	dockerfilePath, _ = rep.FindDockerfileInTar(tarPath)
-	folderName := filepath.Dir(dockerfilePath)
+	folderName, _ := rep.GetFolderNameFromTar(tarPath)
+	fmt.Println(folderName)
 
 	srcDir := filepath.Join(repoDir, folderName)
 	dstDir := repoDir
+
+	if !info.Dockerfile {
+		if info.Language == "node" {
+			dockerfilesamples.NodeApplication(srcDir)
+
+		} else if info.Language == "java" {
+			dockerfilesamples.JavaApplication(srcDir)
+		}
+	}
 
 	err = rep.ArchiveToTarGz(srcDir, dstDir)
 	if handleError(c, err, http.StatusBadRequest) {
@@ -94,11 +126,11 @@ func ApplicationDeploy2(c *gin.Context) {
 		return
 	}
 
-	if info.PortBind.Count > 0 {
-		saveInfo(info.InstanceId, info.PortBind)
-	}
+	// TODO: save info to redis
 
-	os.RemoveAll(repoDir)
+	// if info.PortBind.Count > 0 {
+	// 	saveInfo(info.InstanceId, info.PortBind)
+	// }
 }
 
 func handleError(c *gin.Context, err error, status int) bool {
