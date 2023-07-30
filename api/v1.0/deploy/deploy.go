@@ -13,10 +13,11 @@ import (
 	conf "github.com/sw-maestro-kumofactory/miz-ball/config"
 
 	"github.com/sw-maestro-kumofactory/miz-ball/utils/dockerclient"
+	"github.com/sw-maestro-kumofactory/miz-ball/utils/dockerfilegenerator"
 	"github.com/sw-maestro-kumofactory/miz-ball/utils/ecr"
 	rep "github.com/sw-maestro-kumofactory/miz-ball/utils/repomanagement"
 
-	dockerfilesamples "github.com/sw-maestro-kumofactory/miz-ball/utils/dockerfilegenerator/dockerfile-samples"
+	samplebuilder "github.com/sw-maestro-kumofactory/miz-ball/utils/dockerfilegenerator/sample-builder"
 )
 
 // TODO: add validation
@@ -48,12 +49,18 @@ type DeployInfo struct {
 	Language    string       `json:"Language"`
 	Runtime     string       `json:"Runtime"`
 	Compiler    string       `json:"Compiler"`
+	Env         []EnvInfo    `json:"env"`
 }
 
 type PortBindInfo struct {
 	Count  int      `json:"count"`
 	Expose []int    `json:"expose"`
 	Bind   []string `json:"bind"`
+}
+
+type EnvInfo struct {
+	Key   string `json:"key"`
+	Value string `json:"value"`
 }
 
 var rootDir = "/app/repository/"
@@ -100,14 +107,33 @@ func ApplicationDeploy2(c *gin.Context) {
 	srcDir := filepath.Join(repoDir, folderName)
 	dstDir := repoDir
 
-	if !info.Dockerfile {
-		if info.Language == "node" {
-			dockerfilesamples.NodeApplication(srcDir)
-
-		} else if info.Language == "java" {
-			dockerfilesamples.JavaApplication(srcDir)
+	// TODO: wrap this code
+	builder := dockerfilegenerator.NewBuilder()
+	if info.Env != nil {
+		for _, env := range info.Env {
+			builder.AddEnv(env.Key, env.Value)
 		}
 	}
+	if !info.Dockerfile {
+		if info.Language == "node" {
+			samplebuilder.AddNodeBuilder(builder)
+			// samplebuilder.NodeApplication(srcDir)
+
+		} else if info.Language == "java" {
+			samplebuilder.AddJavaBuilder(builder)
+			// samplebuilder.JavaApplication(srcDir)
+		}
+	} else if info.Dockerfile {
+		dockerfilePath := filepath.Join(srcDir, "Dockerfile")
+		dockerfileStream, err := os.ReadFile(dockerfilePath)
+		if err != nil {
+			fmt.Println("error")
+		}
+		builder.AddDockerfile(dockerfileStream)
+		os.Remove(dockerfilePath)
+	}
+	builder.CreateDockerfile(srcDir, "Dockerfile")
+	// until here
 
 	err = rep.CompressToTarGz(srcDir, dstDir)
 	if handleError(c, err, http.StatusBadRequest) {
