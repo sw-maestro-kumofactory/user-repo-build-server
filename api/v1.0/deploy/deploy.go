@@ -39,16 +39,16 @@ import (
 //	- check compiler
 
 type DeployInfo struct {
-	InstanceId  string       `json:"target-instance" binding:"required"`
-	GitHubToken string       `json:"github-token"`
+	InstanceId  string       `json:"targetInstance" binding:"required"`
+	GitHubToken string       `json:"githubToken"`
 	User        string       `json:"user" binding:"required"`
 	Repo        string       `json:"repo" binding:"required"`
 	Branch      string       `json:"branch" binding:"required"`
 	Dockerfile  bool         `json:"Dockerfile"`
 	PortBind    PortBindInfo `json:"portbind"`
-	Language    string       `json:"Language"`
-	Runtime     string       `json:"Runtime"`
-	Compiler    string       `json:"Compiler"`
+	Language    string       `json:"language"`
+	Runtime     string       `json:"runtime"`
+	Compiler    string       `json:"compiler"`
 	Env         []EnvInfo    `json:"env"`
 }
 
