@@ -28,11 +28,12 @@ func NodeApplication(targetDir string) {
 }
 
 func AddNodeBuilder(builder *dockerfilegenerator.Builder) {
+
 	builder.AddDirective(dfenum.FROM, "node:16-alpine AS builder")
 	builder.AddDirective(dfenum.WORKDIR, "/app")
 	builder.AddDirective(dfenum.COPY, ". .")
 	builder.AddDirective(dfenum.RUN, "npm install")
-	builder.AddDirective(dfenum.RUN, "npm run build")
+	// builder.AddDirective(dfenum.RUN, "npm run build")
 
 	builder.AddDirective(dfenum.FROM, "node:16-alpine")
 	builder.AddDirective(dfenum.WORKDIR, "/app")

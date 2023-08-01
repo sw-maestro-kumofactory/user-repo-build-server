@@ -87,7 +87,7 @@ func ApplicationDeploy2(c *gin.Context) {
 	if handleError(c, err, http.StatusBadRequest) {
 		return
 	}
-	defer os.RemoveAll(repoDir)
+	// defer os.RemoveAll(repoDir)
 
 	tarPath = filepath.Join(repoDir, "repo.tar.gz")
 	err = cloneGitHubRepository(tarPath, info.User, info.Repo, info.Branch)
@@ -109,11 +109,11 @@ func ApplicationDeploy2(c *gin.Context) {
 
 	// TODO: wrap this code
 	builder := dockerfilegenerator.NewBuilder()
-	if info.Env != nil {
-		for _, env := range info.Env {
-			builder.AddEnv(env.Key, env.Value)
-		}
-	}
+	// if info.Env != nil {
+	// 	for _, env := range info.Env {
+	// 		builder.AddEnv(env.Key, env.Value)
+	// 	}
+	// }
 	if !info.Dockerfile {
 		if info.Language == "node" {
 			samplebuilder.AddNodeBuilder(builder)
@@ -133,6 +133,13 @@ func ApplicationDeploy2(c *gin.Context) {
 		os.Remove(dockerfilePath)
 	}
 	builder.CreateDockerfile(srcDir, "Dockerfile")
+
+	if info.Env != nil {
+		builder = injectEnvToDockerfile(filepath.Join(srcDir, "Dockerfile"), info.Env)
+		os.Remove(filepath.Join(srcDir, "Dockerfile"))
+		builder.CreateDockerfile(srcDir, "Dockerfile")
+	}
+
 	// until here
 
 	err = rep.CompressToTarGz(srcDir, dstDir)
