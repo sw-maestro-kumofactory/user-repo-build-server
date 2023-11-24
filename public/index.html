@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SSE Example</title>
+</head>
+<body>
+    <h1>Server-Sent Events (SSE) Example</h1>
+    <div id="sse-data"></div>
+
+    <script>
+        // Check if the browser supports EventSource
+        if (window.EventSource) {
+            const source = new EventSource('http://localhost:8080/api/v1/sse');
+
+            source.onmessage = function(e) {
+                const dataContainer = document.getElementById('sse-data');
+                dataContainer.innerHTML += e.data + '<br>';
+            };
+
+            source.onerror = function(e) {
+                console.error('EventSource failed:', e);
+                e.target.close();
+            };
+        } else {
+            // The browser doesn't support EventSource
+            console.error('Your browser doesn\'t support SSE');
+        }
+    </script>
+</body>
+</html>
