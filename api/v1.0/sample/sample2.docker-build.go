@@ -20,7 +20,7 @@ func SAMPLE_TEST_BUILD(c *gin.Context) {
 	tags := []string{"434126037102.dkr.ecr.ap-northeast-2.amazonaws.com/kumo-customer:i-02b5064a1e36be086"}
 	dockerfilePath := "coding-convention-sample-flask-f361fb2/Dockerfile"
 
-	err = dockerclient.BuildImage(cli, tarPath, tags, dockerfilePath)
+	_, err = dockerclient.BuildImage(cli, tarPath, tags, dockerfilePath)
 	if err != nil {
 		fmt.Println(err.Error())
 		return

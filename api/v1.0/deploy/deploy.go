@@ -1,12 +1,14 @@
 package deploy
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
 
+	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
 	"github.com/gin-gonic/gin"
 
@@ -199,10 +201,31 @@ func buildContainer(cli *client.Client, tarPath string, instanceId string, docke
 	imageName := fmt.Sprintf(template, instanceId)
 	tags := []string{imageName}
 
-	err := dockerclient.BuildImage(cli, tarPath, tags, dockerfilePath)
+	buildLog, err := dockerclient.BuildImage(cli, tarPath, tags, dockerfilePath)
 	if err != nil {
 		return "", err
 	}
+
+	images, _ := cli.ImageList(context.Background(), types.ImageListOptions{})
+
+	imageExists := false
+
+	for _, image := range images {
+		for _, repoTag := range image.RepoTags {
+			if repoTag == imageName {
+				imageExists = true
+				break
+			}
+		}
+		if imageExists {
+			break
+		}
+	}
+
+	if !imageExists {
+		return "", fmt.Errorf(buildLog)
+	}
+
 	return imageName, nil
 }
 

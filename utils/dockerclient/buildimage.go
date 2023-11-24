@@ -11,12 +11,12 @@ import (
 	"github.com/docker/docker/client"
 )
 
-func BuildImage(dockerClient *client.Client, tarPath string, tags []string, dockerfilePath string) error {
+func BuildImage(dockerClient *client.Client, tarPath string, tags []string, dockerfilePath string) (string, error) {
 	ctx := context.Background()
 
 	buildCtx, err := os.Open(tarPath)
 	if err != nil {
-		return err
+		return "", err
 	}
 	defer buildCtx.Close()
 
@@ -27,18 +27,20 @@ func BuildImage(dockerClient *client.Client, tarPath string, tags []string, dock
 
 	resp, err := dockerClient.ImageBuild(ctx, buildCtx, buildOptions)
 	if err != nil {
-		return err
+		return "", err
 	}
 	defer resp.Body.Close()
 
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
+	// body, err := io.ReadAll(resp.Body)
+	// if err != nil {
+	// 	return err
+	// }
 
-	fmt.Println(string(body))
+	// fmt.Println(string(body))
 
-	return nil
+	body, _ := io.ReadAll(resp.Body)
+
+	return string(body), nil
 }
 
 func BuildImage2(dockerClient *client.Client, contextPath string, tags []string) error {

@@ -48,12 +48,9 @@ func Push(dockerClient *client.Client, imageName string) error {
 	}
 	defer pushResponse.Close()
 
-	pushResult, err := ioutil.ReadAll(pushResponse)
-	if err != nil {
-		return err
-	}
-
-	fmt.Println(string(pushResult))
+	// print pushResponse
+	body, _ := ioutil.ReadAll(pushResponse)
+	fmt.Println(string(body))
 
 	return nil
 }

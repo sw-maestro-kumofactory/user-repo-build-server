@@ -2,10 +2,13 @@ package apiv1
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 
 	"github.com/sw-maestro-kumofactory/miz-ball/api/v1.0/deploy"
+	"github.com/sw-maestro-kumofactory/miz-ball/api/v1.0/rds"
+	"github.com/sw-maestro-kumofactory/miz-ball/middleware"
 )
 
 func ping(c *gin.Context) {
@@ -26,5 +29,18 @@ func ApplyRoutes(r *gin.RouterGroup) {
 		// v1.GET("/TEST_EXTRACT", sample.SAMPLE_EXTRACT)
 		// v1.GET("/TEST_ARCHIVE", sample.SAMPLE_ARCHIVE)
 		v1.POST("/deploy", deploy.ApplicationDeploy2)
+		v1.POST("/rds/:rds-name", rds.HandleRdsRequest)
+		v1.GET("/sse", middleware.SseHeadersMiddleware(), func(ctx *gin.Context) {
+			messages := []string{"a", "b", "c"}
+			for _, msg := range messages {
+				time.Sleep(time.Second * 1)
+				ctx.SSEvent("message", msg)
+				ctx.Writer.Flush()
+			}
+		})
+		v1.POST("/deployAsync", middleware.SseHeadersMiddleware(), func(ctx *gin.Context) {
+			deployer := deploy.NewDeployer(ctx)
+			deployer.ApplicationDeployAsync()
+		})
 	}
 }
